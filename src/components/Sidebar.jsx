@@ -1,64 +1,56 @@
+import { NavLink } from "react-router-dom";
+
 function Sidebar() {
   return (
-    <aside className="fixed left-0 top-0 hidden h-screen w-72 flex-col bg-[#4b171b] text-[#f8f1e5] shadow-xl lg:flex">
+    <aside className="fixed left-0 top-0 hidden h-screen w-72 bg-[#4b171b] text-white lg:block">
+      {/* LOGO / TITLE */}
+      <div className="border-b border-[#6b282d] p-6">
+        <h1 className="text-xl font-bold">
+          Student Management
+        </h1>
 
-      <div className="flex h-20 items-center border-b border-white/10 px-6">
-        <div>
-          <h1 className="text-xl font-bold tracking-wide">
-            V-PORTAL
-          </h1>
-
-          <p className="mt-1 text-xs text-[#ddcfc0]">
-            Student Administration
-          </p>
-        </div>
+        <p className="mt-1 text-sm text-[#d8b7a4]">
+          Admin Panel
+        </p>
       </div>
 
-      <nav className="flex-1 px-4 py-6">
-
-        <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c9a66b]">
+      <div className="p-5">
+        {/* MAIN MENU */}
+        <p className="mb-4 px-4 text-xs font-bold uppercase tracking-[0.2em] text-[#c9a15f]">
           Main Menu
         </p>
 
-        <a
-          href="/"
-          className="mb-1 block rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold"
-        >
-          Dashboard
-        </a>
+        <nav className="space-y-2">
+          {/* DASHBOARD */}
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) =>
+              `block rounded-xl px-5 py-4 text-sm font-semibold transition ${
+                isActive
+                  ? "bg-[#693438] text-white"
+                  : "text-[#f1e3dc] hover:bg-[#5b272c]"
+              }`
+            }
+          >
+            Dashboard
+          </NavLink>
 
-        <a
-          href="/students"
-          className="mb-1 block rounded-xl px-4 py-3 text-sm text-[#ddcfc0] transition hover:bg-white/10"
-        >
-          Students
-        </a>
-
-        <p className="mb-3 mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c9a66b]">
-          Administration
-        </p>
-
-        <button className="mb-1 block w-full rounded-xl px-4 py-3 text-left text-sm text-[#ddcfc0] hover:bg-white/10">
-          Departments
-        </button>
-
-        <button className="block w-full rounded-xl px-4 py-3 text-left text-sm text-[#ddcfc0] hover:bg-white/10">
-          Settings
-        </button>
-      </nav>
-
-      <div className="border-t border-white/10 p-4">
-        <div className="rounded-xl bg-white/10 p-4">
-          <p className="text-sm font-semibold">
-            Admin Office
-          </p>
-
-          <p className="mt-1 text-xs text-[#ddcfc0]">
-            Administrator
-          </p>
-        </div>
+          {/* STUDENTS */}
+          <NavLink
+            to="/students"
+            className={({ isActive }) =>
+              `block rounded-xl px-5 py-4 text-sm font-semibold transition ${
+                isActive
+                  ? "bg-[#693438] text-white"
+                  : "text-[#f1e3dc] hover:bg-[#5b272c]"
+              }`
+            }
+          >
+            Students
+          </NavLink>
+        </nav>
       </div>
-
     </aside>
   );
 }

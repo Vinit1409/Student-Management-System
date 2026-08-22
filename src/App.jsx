@@ -7,14 +7,19 @@ import {
 
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
-import Dashboard from "./pages/Dashboard";
-import Students from "./pages/Students";
-import { initialStudents } from "./data/students";
 import StudentForm from "./components/StudentForm";
 
+import Dashboard from "./pages/Dashboard";
+import Students from "./pages/Students";
+
+import { initialStudents } from "./data/students";
+
 function App() {
-  const [students, setStudents] = useState(initialStudents);
-  const [showForm, setShowForm] = useState(false);
+  const [students, setStudents] =
+    useState(initialStudents);
+
+  const [showForm, setShowForm] =
+    useState(false);
 
   function addStudent(student) {
     setStudents((current) => [
@@ -23,6 +28,16 @@ function App() {
     ]);
 
     setShowForm(false);
+  }
+
+  function updateStudent(updatedStudent) {
+    setStudents((current) =>
+      current.map((student) =>
+        student.id === updatedStudent.id
+          ? updatedStudent
+          : student
+      )
+    );
   }
 
   return (
@@ -45,6 +60,7 @@ function App() {
                 <Students
                   students={students}
                   onAdd={() => setShowForm(true)}
+                  onUpdate={updateStudent}
                 />
               }
             />
@@ -52,7 +68,10 @@ function App() {
             <Route
               path="*"
               element={
-                <Navigate to="/" replace />
+                <Navigate
+                  to="/"
+                  replace
+                />
               }
             />
           </Routes>

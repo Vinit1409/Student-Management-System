@@ -3,6 +3,7 @@ import StatCard from "../components/StatCard";
 function Dashboard() {
   return (
     <div className="space-y-8">
+      {/* HEADER */}
       <section>
         <p className="text-sm font-semibold text-[#9b333b]">
           Overview
@@ -18,6 +19,7 @@ function Dashboard() {
         </p>
       </section>
 
+      {/* STAT CARDS */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Total Students"
@@ -52,7 +54,9 @@ function Dashboard() {
         />
       </section>
 
+      {/* LOWER SECTION */}
       <section className="grid gap-6 xl:grid-cols-3">
+        {/* PERFORMANCE */}
         <div className="rounded-2xl border border-[#ded6ca] bg-white p-6 xl:col-span-2">
           <div className="flex items-center justify-between">
             <div>
@@ -97,6 +101,7 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* QUICK OVERVIEW */}
         <div className="rounded-2xl border border-[#ded6ca] bg-[#4b171b] p-6 text-[#f8f1e5]">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c9a66b]">
             Quick Overview
@@ -130,7 +135,7 @@ function PerformanceRow({
 }) {
   return (
     <div>
-      <div className="mb-2 flex justify-between text-sm">
+      <div className="mb-2 flex justify-between gap-4 text-sm">
         <span className="font-medium text-[#554a42]">
           {department}
         </span>
