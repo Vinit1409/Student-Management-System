@@ -1,10 +1,19 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
 
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
+import Students from "./pages/Students";
+import { initialStudents } from "./data/students";
 
 function App() {
+  const [students] = useState(initialStudents);
+
   return (
     <div className="min-h-screen bg-[#f5f1e8]">
       <Sidebar />
@@ -18,11 +27,7 @@ function App() {
 
             <Route
               path="/students"
-              element={
-                <div className="rounded-2xl bg-white p-8">
-                  Students page coming next.
-                </div>
-              }
+              element={<Students students={students} />}
             />
 
             <Route
