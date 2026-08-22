@@ -1,5 +1,8 @@
+import { Routes, Route, Navigate } from "react-router-dom";
+
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -10,13 +13,23 @@ function App() {
         <Header />
 
         <main className="p-4 md:p-8">
-          <p className="text-sm font-semibold text-[#9b333b]">
-            College Administration
-          </p>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
 
-          <h1 className="mt-2 text-3xl font-bold text-[#292321]">
-            Student Management Portal
-          </h1>
+            <Route
+              path="/students"
+              element={
+                <div className="rounded-2xl bg-white p-8">
+                  Students page coming next.
+                </div>
+              }
+            />
+
+            <Route
+              path="*"
+              element={<Navigate to="/" replace />}
+            />
+          </Routes>
         </main>
       </div>
     </div>
