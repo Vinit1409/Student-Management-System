@@ -11,6 +11,15 @@ import StudentForm from "./components/StudentForm";
 
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
+import Departments from "./pages/Departments";
+import Settings from "./pages/Settings";
+import StudentProfile from "./pages/StudentProfile";
+import Timetable from "./pages/Timetable";
+import Attendance from "./pages/Attendance";
+import Gradebook from "./pages/Gradebook";
+import Assignments from "./pages/Assignments";
+import Finance from "./pages/Finance";
+import Requests from "./pages/Requests";
 
 import { initialStudents } from "./data/students";
 
@@ -19,9 +28,6 @@ function App() {
     useState(initialStudents);
 
   const [showForm, setShowForm] =
-    useState(false);
-
-  const [mobileMenuOpen, setMobileMenuOpen] =
     useState(false);
 
   function addStudent(student) {
@@ -43,35 +49,36 @@ function App() {
     );
   }
 
-  function closeMobileMenu() {
-    setMobileMenuOpen(false);
+  function deleteStudent(studentId) {
+    setStudents((current) =>
+      current.filter(
+        (student) =>
+          student.id !== studentId
+      )
+    );
   }
 
   return (
     <div className="min-h-screen bg-[#f5f1e8]">
 
-      {/* SIDEBAR */}
-      <Sidebar
-        mobileOpen={mobileMenuOpen}
-        onClose={closeMobileMenu}
-      />
+      <Sidebar />
 
       <div className="lg:ml-72">
 
-        {/* HEADER */}
-        <Header
-          onMenuClick={() =>
-            setMobileMenuOpen(true)
-          }
-        />
+        <Header />
 
         <main className="p-4 md:p-8">
+
           <Routes>
 
             {/* DASHBOARD */}
             <Route
               path="/"
-              element={<Dashboard />}
+              element={
+                <Dashboard
+                  students={students}
+                />
+              }
             />
 
             {/* STUDENTS */}
@@ -84,11 +91,85 @@ function App() {
                     setShowForm(true)
                   }
                   onUpdate={updateStudent}
+                  onDelete={deleteStudent}
                 />
               }
             />
 
-            {/* INVALID ROUTE */}
+            {/* STUDENT PROFILE */}
+            <Route
+              path="/students/:id"
+              element={
+                <StudentProfile
+                  students={students}
+                />
+              }
+            />
+
+            {/* DEPARTMENTS */}
+            <Route
+              path="/departments"
+              element={
+                <Departments />
+              }
+            />
+
+            {/* ACADEMICS */}
+            <Route
+              path="/timetable"
+              element={
+                <Timetable />
+              }
+            />
+
+            <Route
+              path="/attendance"
+              element={
+                <Attendance
+                  students={students}
+                />
+              }
+            />
+
+            <Route
+              path="/gradebook"
+              element={
+                <Gradebook
+                  students={students}
+                />
+              }
+            />
+
+            <Route
+              path="/assignments"
+              element={
+                <Assignments />
+              }
+            />
+
+            {/* ADMINISTRATION */}
+            <Route
+              path="/finance"
+              element={
+                <Finance />
+              }
+            />
+
+            <Route
+              path="/requests"
+              element={
+                <Requests />
+              }
+            />
+
+            <Route
+              path="/settings"
+              element={
+                <Settings />
+              }
+            />
+
+            {/* FALLBACK */}
             <Route
               path="*"
               element={
@@ -100,10 +181,13 @@ function App() {
             />
 
           </Routes>
+
         </main>
+
       </div>
 
-      {/* ADD STUDENT FORM */}
+      {/* ADD STUDENT MODAL */}
+
       {showForm && (
         <StudentForm
           onClose={() =>
