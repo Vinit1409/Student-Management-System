@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-function Students({ students }) {
+function Students({ students, onAdd }){ 
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("All Departments");
   const [status, setStatus] = useState("All Status");
@@ -51,9 +51,12 @@ function Students({ students }) {
           </p>
         </div>
 
-        <button className="rounded-xl bg-[#4b171b] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#641f25]">
-          + Add Student
-        </button>
+        <button
+  onClick={onAdd}
+  className="rounded-xl bg-[#4b171b] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#641f25]"
+>
+  + Add Student
+</button>
       </section>
 
       <section className="rounded-2xl border border-[#ded6ca] bg-white shadow-sm">

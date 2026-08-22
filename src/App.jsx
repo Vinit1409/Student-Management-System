@@ -10,9 +10,20 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import { initialStudents } from "./data/students";
+import StudentForm from "./components/StudentForm";
 
 function App() {
-  const [students] = useState(initialStudents);
+  const [students, setStudents] = useState(initialStudents);
+  const [showForm, setShowForm] = useState(false);
+
+  function addStudent(student) {
+    setStudents((current) => [
+      student,
+      ...current,
+    ]);
+
+    setShowForm(false);
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f1e8]">
@@ -23,20 +34,37 @@ function App() {
 
         <main className="p-4 md:p-8">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route
+              path="/"
+              element={<Dashboard />}
+            />
 
             <Route
               path="/students"
-              element={<Students students={students} />}
+              element={
+                <Students
+                  students={students}
+                  onAdd={() => setShowForm(true)}
+                />
+              }
             />
 
             <Route
               path="*"
-              element={<Navigate to="/" replace />}
+              element={
+                <Navigate to="/" replace />
+              }
             />
           </Routes>
         </main>
       </div>
+
+      {showForm && (
+        <StudentForm
+          onClose={() => setShowForm(false)}
+          onSave={addStudent}
+        />
+      )}
     </div>
   );
 }
