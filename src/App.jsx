@@ -1,15 +1,25 @@
+import Sidebar from "./components/Sidebar";
+
 function App() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f1e8]">
-      <div className="rounded-2xl bg-white p-10 text-center shadow-lg">
-        <h1 className="text-4xl font-bold text-[#4b171b]">
-          Student Management Portal
-        </h1>
+    <div className="min-h-screen bg-[#f5f1e8]">
 
-        <p className="mt-3 text-[#75685d]">
-          React + Tailwind CSS
-        </p>
-      </div>
+      <Sidebar />
+
+      <main className="min-h-screen lg:ml-72">
+        <div className="p-8">
+
+          <p className="text-sm font-semibold text-[#9b333b]">
+            College Administration
+          </p>
+
+          <h1 className="mt-2 text-3xl font-bold text-[#292321]">
+            Student Management Portal
+          </h1>
+
+        </div>
+      </main>
+
     </div>
   );
 }
