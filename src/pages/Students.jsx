@@ -2,18 +2,37 @@ import { useMemo, useState } from "react";
 
 function Students({ students }) {
   const [search, setSearch] = useState("");
+  const [department, setDepartment] = useState("All Departments");
+  const [status, setStatus] = useState("All Status");
+
+  const departments = [
+    "All Departments",
+    ...new Set(students.map((student) => student.department)),
+  ];
 
   const filteredStudents = useMemo(() => {
     const query = search.toLowerCase().trim();
 
     return students.filter((student) => {
-      return (
+      const matchesSearch =
         student.name.toLowerCase().includes(query) ||
         student.studentId.toLowerCase().includes(query) ||
-        student.email.toLowerCase().includes(query)
+        student.email.toLowerCase().includes(query);
+
+      const matchesDepartment =
+        department === "All Departments" ||
+        student.department === department;
+
+      const matchesStatus =
+        status === "All Status" || student.status === status;
+
+      return (
+        matchesSearch &&
+        matchesDepartment &&
+        matchesStatus
       );
     });
-  }, [students, search]);
+  }, [students, search, department, status]);
 
   return (
     <div className="space-y-6">
@@ -39,20 +58,46 @@ function Students({ students }) {
 
       <section className="rounded-2xl border border-[#ded6ca] bg-white shadow-sm">
         <div className="border-b border-[#e8e0d5] p-5">
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#918478]">
-              SEARCH
-            </span>
+          <div className="grid gap-3 md:grid-cols-[1fr_220px_160px]">
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#918478]">
+                SEARCH
+              </span>
 
-            <input
-              type="text"
-              value={search}
+              <input
+                type="text"
+                value={search}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                placeholder="Name, student ID or email..."
+                className="w-full rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] py-3 pl-20 pr-4 text-sm outline-none focus:border-[#8d3b42]"
+              />
+            </div>
+
+            <select
+              value={department}
               onChange={(event) =>
-                setSearch(event.target.value)
+                setDepartment(event.target.value)
               }
-              placeholder="Search by name, student ID or email..."
-              className="w-full rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] py-3 pl-20 pr-4 text-sm outline-none transition focus:border-[#8d3b42] focus:ring-2 focus:ring-[#8d3b42]/10"
-            />
+              className="rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none focus:border-[#8d3b42]"
+            >
+              {departments.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+
+            <select
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value)
+              }
+              className="rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none focus:border-[#8d3b42]"
+            >
+              <option>All Status</option>
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
           </div>
         </div>
 
