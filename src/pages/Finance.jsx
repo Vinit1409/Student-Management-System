@@ -1,565 +1,578 @@
 import { useMemo, useState } from "react";
-import { initialFinance } from "../data/finance";
+import { useStudents } from "../context/StudentContext";
 
 function Finance() {
-  const [records] = useState(initialFinance);
+  const {
+    students,
+    fees,
+    updateTotalFees,
+    setPaidAmount,
+  } = useStudents();
 
-  const [search, setSearch] = useState("");
-  const [department, setDepartment] =
-    useState("All Departments");
-  const [status, setStatus] =
-    useState("All Status");
+  const [search, setSearch] =
+    useState("");
 
-  const [selectedStudent, setSelectedStudent] =
+  const [filter, setFilter] =
+    useState("All");
+
+  const [editingStudent, setEditingStudent] =
     useState(null);
 
-  const departments = [
-    "All Departments",
-    ...new Set(
-      records.map((student) => student.department)
-    ),
-  ];
+  const [totalInput, setTotalInput] =
+    useState("");
 
-  // =========================
-  // OVERALL CALCULATIONS
-  // =========================
+  const [paidInput, setPaidInput] =
+    useState("");
 
-  const totalFee = records.reduce(
-    (total, student) =>
-      total + student.totalFee,
-    0
-  );
+  // ==================================================
+  // SAME STUDENTS + FEE DATA
+  // ==================================================
 
-  const totalPaid = records.reduce(
-    (total, student) =>
-      total + student.paid,
-    0
-  );
+  const financeStudents =
+    useMemo(() => {
+      return students
+        .map((student) => {
 
-  const totalDue = records.reduce(
-    (total, student) =>
-      total + student.due,
-    0
-  );
+          const fee =
+            fees[student.id] || {
+              total: 80000,
+              paid: 0,
+            };
 
-  const paidStudents = records.filter(
-    (student) => student.status === "Paid"
-  ).length;
+          const total =
+            Number(fee.total) || 0;
 
-  const partialStudents = records.filter(
-    (student) => student.status === "Partial"
-  ).length;
+          const paid =
+            Number(fee.paid) || 0;
 
-  const pendingStudents = records.filter(
-    (student) => student.status === "Pending"
-  ).length;
+          const pending =
+            Math.max(total - paid, 0);
 
-  // =========================
-  // FILTER
-  // =========================
+          const status =
+            pending === 0
+              ? "Paid"
+              : "Pending";
 
-  const filteredRecords = useMemo(() => {
-    const query = search
-      .toLowerCase()
-      .trim();
+          return {
+            ...student,
+            totalFees: total,
+            paidFees: paid,
+            pendingFees: pending,
+            feeStatus: status,
+          };
+        })
+        .filter((student) => {
 
-    return records.filter((student) => {
-      const matchesSearch =
-        student.student
-          .toLowerCase()
-          .includes(query) ||
-        student.studentId
-          .toLowerCase()
-          .includes(query) ||
-        student.department
-          .toLowerCase()
-          .includes(query);
+          const query =
+            search.toLowerCase();
 
-      const matchesDepartment =
-        department === "All Departments" ||
-        student.department === department;
+          const matchesSearch =
+            student.name
+              .toLowerCase()
+              .includes(query) ||
+            student.studentId
+              .toLowerCase()
+              .includes(query);
 
-      const matchesStatus =
-        status === "All Status" ||
-        student.status === status;
+          const matchesFilter =
+            filter === "All" ||
+            student.feeStatus === filter;
 
-      return (
-        matchesSearch &&
-        matchesDepartment &&
-        matchesStatus
+          return (
+            matchesSearch &&
+            matchesFilter
+          );
+        });
+    }, [
+      students,
+      fees,
+      search,
+      filter,
+    ]);
+
+  // ==================================================
+  // SUMMARY
+  // ==================================================
+
+  const totalFees =
+    students.reduce(
+      (sum, student) => {
+
+        const fee =
+          fees[student.id] || {
+            total: 80000,
+            paid: 0,
+          };
+
+        return (
+          sum +
+          Number(fee.total || 0)
+        );
+      },
+      0
+    );
+
+  const totalPaid =
+    students.reduce(
+      (sum, student) => {
+
+        const fee =
+          fees[student.id] || {
+            total: 80000,
+            paid: 0,
+          };
+
+        return (
+          sum +
+          Number(fee.paid || 0)
+        );
+      },
+      0
+    );
+
+  const totalPending =
+    Math.max(
+      totalFees - totalPaid,
+      0
+    );
+
+  // ==================================================
+  // EDIT FEE
+  // ==================================================
+
+  function openEdit(student) {
+    setEditingStudent(student);
+
+    setTotalInput(
+      String(student.totalFees)
+    );
+
+    setPaidInput(
+      String(student.paidFees)
+    );
+  }
+
+  function saveFee() {
+    if (!editingStudent) return;
+
+    const total =
+      Number(totalInput);
+
+    const paid =
+      Number(paidInput);
+
+    if (
+      Number.isNaN(total) ||
+      Number.isNaN(paid) ||
+      total < 0 ||
+      paid < 0
+    ) {
+      alert(
+        "Please enter valid fee amounts."
       );
-    });
-  }, [
-    records,
-    search,
-    department,
-    status,
-  ]);
+
+      return;
+    }
+
+    if (paid > total) {
+      alert(
+        "Paid amount cannot be greater than total fees."
+      );
+
+      return;
+    }
+
+    updateTotalFees(
+      editingStudent.id,
+      total
+    );
+
+    setPaidAmount(
+      editingStudent.id,
+      paid
+    );
+
+    setEditingStudent(null);
+  }
 
   return (
     <div className="space-y-6">
 
-      {/* PAGE HEADER */}
+      {/* HEADER */}
 
       <section>
+
         <p className="text-sm font-semibold text-[#9b333b]">
-          Finance & Administration
+          Administration
         </p>
 
         <h1 className="mt-1 text-3xl font-bold text-[#302925]">
-          Fee Management
+          Finance
         </h1>
 
         <p className="mt-2 text-sm text-[#84786d]">
-          Track student fee payments, pending
-          balances and payment history.
+          Manage student-wise fees and
+          payment records.
         </p>
+
       </section>
 
-      {/* ========================= */}
-      {/* SUMMARY CARDS */}
-      {/* ========================= */}
+      {/* SUMMARY */}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-        <FinanceCard
+        <SummaryCard
           title="Total Fees"
-          value={formatCurrency(totalFee)}
-          description={`${records.length} student records`}
-          icon="₹"
-          iconClass="bg-[#f0e1d2] text-[#6d2529]"
+          value={`₹${totalFees.toLocaleString()}`}
         />
 
-        <FinanceCard
+        <SummaryCard
           title="Fees Collected"
-          value={formatCurrency(totalPaid)}
-          description={`${paidStudents} students fully paid`}
-          icon="✓"
-          iconClass="bg-[#e5efe4] text-[#35643b]"
+          value={`₹${totalPaid.toLocaleString()}`}
+          valueClass="text-green-700"
         />
 
-        <FinanceCard
+        <SummaryCard
           title="Total Pending"
-          value={formatCurrency(totalDue)}
-          description={`${pendingStudents + partialStudents} students have dues`}
-          icon="!"
-          iconClass="bg-[#f4e4e1] text-[#8b4e47]"
+          value={`₹${totalPending.toLocaleString()}`}
+          valueClass="text-red-600"
         />
 
-        <FinanceCard
-          title="Payment Rate"
-          value={`${Math.round(
-            (totalPaid / totalFee) * 100
-          )}%`}
-          description="Fees collected so far"
-          icon="%"
-          iconClass="bg-[#f1e7cf] text-[#856526]"
+        <SummaryCard
+          title="Students"
+          value={students.length}
         />
 
       </section>
 
-      {/* ========================= */}
-      {/* PAYMENT STATUS */}
-      {/* ========================= */}
+      {/* SEARCH */}
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="rounded-2xl border border-[#ded6ca] bg-white p-5 shadow-sm">
 
-        <StatusSummary
-          title="Paid Students"
-          count={paidStudents}
-          amount={records
-            .filter(
-              (student) =>
-                student.status === "Paid"
-            )
-            .reduce(
-              (sum, student) =>
-                sum + student.paid,
-              0
-            )}
-          type="paid"
-        />
+        <div className="grid gap-3 md:grid-cols-[1fr_200px]">
 
-        <StatusSummary
-          title="Partially Paid"
-          count={partialStudents}
-          amount={records
-            .filter(
-              (student) =>
-                student.status === "Partial"
-            )
-            .reduce(
-              (sum, student) =>
-                sum + student.due,
-              0
-            )}
-          type="partial"
-        />
+          <input
+            value={search}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
+            placeholder="Search student name or ID..."
+            className="rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none"
+          />
 
-        <StatusSummary
-          title="Pending Students"
-          count={pendingStudents}
-          amount={records
-            .filter(
-              (student) =>
-                student.status === "Pending"
-            )
-            .reduce(
-              (sum, student) =>
-                sum + student.due,
-              0
-            )}
-          type="pending"
-        />
+          <select
+            value={filter}
+            onChange={(e) =>
+              setFilter(e.target.value)
+            }
+            className="rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none"
+          >
 
-      </section>
+            <option value="All">
+              All Students
+            </option>
 
-      {/* ========================= */}
-      {/* TABLE */}
-      {/* ========================= */}
+            <option value="Paid">
+              Fully Paid
+            </option>
 
-      <section className="overflow-hidden rounded-2xl border border-[#ded6ca] bg-white shadow-sm">
+            <option value="Pending">
+              Pending
+            </option>
 
-        {/* FILTER BAR */}
-
-        <div className="border-b border-[#e8e0d5] p-5">
-
-          <div className="grid gap-3 md:grid-cols-[1fr_240px_170px]">
-
-            <input
-              type="text"
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              placeholder="Search student, ID or department..."
-              className="rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none transition focus:border-[#8d3b42]"
-            />
-
-            <select
-              value={department}
-              onChange={(event) =>
-                setDepartment(event.target.value)
-              }
-              className="rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none focus:border-[#8d3b42]"
-            >
-              {departments.map((item) => (
-                <option
-                  key={item}
-                  value={item}
-                >
-                  {item}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={status}
-              onChange={(event) =>
-                setStatus(event.target.value)
-              }
-              className="rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none focus:border-[#8d3b42]"
-            >
-              <option value="All Status">
-                All Status
-              </option>
-
-              <option value="Paid">
-                Paid
-              </option>
-
-              <option value="Partial">
-                Partial
-              </option>
-
-              <option value="Pending">
-                Pending
-              </option>
-            </select>
-
-          </div>
+          </select>
 
         </div>
 
-        {/* DESKTOP TABLE */}
+      </section>
 
-        <div className="hidden overflow-x-auto md:block">
+      {/* TABLE */}
 
-          <table className="w-full min-w-[1050px]">
+      <section className="overflow-x-auto rounded-2xl border border-[#ded6ca] bg-white shadow-sm">
 
-            <thead className="bg-[#faf7f1]">
+        <table className="w-full min-w-[1000px]">
 
-              <tr>
+          <thead className="bg-[#faf7f1]">
 
-                <th className={thClass}>
-                  Student
-                </th>
+            <tr>
 
-                <th className={thClass}>
-                  Student ID
-                </th>
+              <th className="px-6 py-4 text-left">
+                Student
+              </th>
 
-                <th className={thClass}>
-                  Department
-                </th>
+              <th className="px-6 py-4 text-left">
+                Student ID
+              </th>
 
-                <th className={thClass}>
-                  Total Fee
-                </th>
+              <th className="px-6 py-4 text-left">
+                Total Fees
+              </th>
 
-                <th className={thClass}>
-                  Paid
-                </th>
+              <th className="px-6 py-4 text-left">
+                Paid
+              </th>
 
-                <th className={thClass}>
-                  Pending
-                </th>
+              <th className="px-6 py-4 text-left">
+                Pending
+              </th>
 
-                <th className={thClass}>
-                  Status
-                </th>
+              <th className="px-6 py-4 text-left">
+                Status
+              </th>
 
-                <th className={thClass}>
-                  Action
-                </th>
+              <th className="px-6 py-4 text-left">
+                Action
+              </th>
 
-              </tr>
+            </tr>
 
-            </thead>
+          </thead>
 
-            <tbody className="divide-y divide-[#eee7dc]">
+          <tbody className="divide-y divide-[#eee7dc]">
 
-              {filteredRecords.map(
-                (student) => (
+            {financeStudents.map(
+              (student) => (
 
-                  <tr
-                    key={student.id}
-                    className="transition hover:bg-[#fcfaf6]"
-                  >
+                <tr
+                  key={student.id}
+                  className="hover:bg-[#fcfaf6]"
+                >
 
-                    {/* STUDENT */}
+                  {/* STUDENT */}
 
-                    <td className="px-6 py-4">
+                  <td className="px-6 py-4">
 
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
 
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ead8c5] text-sm font-bold text-[#6d2529]">
-                          {getInitials(
-                            student.student
-                          )}
-                        </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ead8c5] text-sm font-bold text-[#6d2529]">
+                        {getInitials(
+                          student.name
+                        )}
+                      </div>
 
-                        <div>
+                      <div>
 
-                          <p className="font-semibold text-[#332c28]">
-                            {student.student}
-                          </p>
+                        <p className="font-semibold text-[#332c28]">
+                          {student.name}
+                        </p>
 
-                          <p className="text-xs text-[#95887c]">
-                            {student.lastPayment}
-                          </p>
-
-                        </div>
+                        <p className="text-xs text-[#95887c]">
+                          {student.department}
+                        </p>
 
                       </div>
 
-                    </td>
+                    </div>
 
-                    {/* STUDENT ID */}
+                  </td>
 
-                    <td className="px-6 py-4 text-sm font-semibold text-[#51473f]">
+                  {/* ID */}
+
+                  <td className="px-6 py-4">
+
+                    <span className="rounded-lg bg-[#f3e9dc] px-3 py-2 text-xs font-bold text-[#6d2529]">
                       {student.studentId}
-                    </td>
+                    </span>
 
-                    {/* DEPARTMENT */}
+                  </td>
 
-                    <td className="px-6 py-4 text-sm text-[#665a50]">
-                      {student.department}
-                    </td>
+                  {/* TOTAL */}
 
-                    {/* TOTAL */}
+                  <td className="px-6 py-4 font-semibold">
+                    ₹
+                    {student.totalFees.toLocaleString()}
+                  </td>
 
-                    <td className="px-6 py-4 text-sm font-semibold text-[#332c28]">
-                      {formatCurrency(
-                        student.totalFee
-                      )}
-                    </td>
+                  {/* PAID */}
 
-                    {/* PAID */}
+                  <td className="px-6 py-4 font-semibold text-green-700">
+                    ₹
+                    {student.paidFees.toLocaleString()}
+                  </td>
 
-                    <td className="px-6 py-4 text-sm font-bold text-[#35643b]">
-                      {formatCurrency(
-                        student.paid
-                      )}
-                    </td>
+                  {/* PENDING */}
 
-                    {/* PENDING */}
+                  <td className="px-6 py-4 font-semibold text-red-600">
+                    ₹
+                    {student.pendingFees.toLocaleString()}
+                  </td>
 
-                    <td className="px-6 py-4 text-sm font-bold text-[#8b4e47]">
-                      {formatCurrency(
-                        student.due
-                      )}
-                    </td>
+                  {/* STATUS */}
 
-                    {/* STATUS */}
+                  <td className="px-6 py-4">
 
-                    <td className="px-6 py-4">
-                      <PaymentBadge
-                        status={
-                          student.status
-                        }
-                      />
-                    </td>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        student.feeStatus ===
+                        "Paid"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {student.feeStatus}
+                    </span>
 
-                    {/* VIEW */}
+                  </td>
 
-                    <td className="px-6 py-4">
+                  {/* ACTION */}
 
-                      <button
-                        onClick={() =>
-                          setSelectedStudent(
-                            student
-                          )
-                        }
-                        title="View Payment Details"
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#ddd3c6] text-[#62564d] transition hover:bg-[#f4eee5] hover:text-[#4b171b]"
-                      >
-                        👁
-                      </button>
+                  <td className="px-6 py-4">
 
-                    </td>
+                    <button
+                      onClick={() =>
+                        openEdit(student)
+                      }
+                      className="rounded-lg bg-[#4b171b] px-4 py-2 text-xs font-bold text-white hover:bg-[#641f25]"
+                    >
+                      Manage Fees
+                    </button>
 
-                  </tr>
+                  </td>
 
-                )
-              )}
+                </tr>
 
-            </tbody>
+              )
+            )}
 
-          </table>
+          </tbody>
 
-        </div>
-
-        {/* MOBILE CARDS */}
-
-        <div className="divide-y divide-[#eee7dc] md:hidden">
-
-          {filteredRecords.map(
-            (student) => (
-
-              <div
-                key={student.id}
-                className="p-5"
-              >
-
-                <div className="flex items-start justify-between">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ead8c5] text-sm font-bold text-[#6d2529]">
-                      {getInitials(
-                        student.student
-                      )}
-                    </div>
-
-                    <div>
-
-                      <p className="font-semibold text-[#332c28]">
-                        {student.student}
-                      </p>
-
-                      <p className="text-xs text-[#95887c]">
-                        {student.studentId}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  <PaymentBadge
-                    status={student.status}
-                  />
-
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3">
-
-                  <MobileInfo
-                    label="Department"
-                    value={
-                      student.department
-                    }
-                  />
-
-                  <MobileInfo
-                    label="Total Fee"
-                    value={formatCurrency(
-                      student.totalFee
-                    )}
-                  />
-
-                  <MobileInfo
-                    label="Paid"
-                    value={formatCurrency(
-                      student.paid
-                    )}
-                  />
-
-                  <MobileInfo
-                    label="Pending"
-                    value={formatCurrency(
-                      student.due
-                    )}
-                  />
-
-                </div>
-
-                <button
-                  onClick={() =>
-                    setSelectedStudent(
-                      student
-                    )
-                  }
-                  className="mt-4 w-full rounded-xl border border-[#ddd3c6] py-2.5 text-sm font-semibold text-[#4b171b] transition hover:bg-[#f4eee5]"
-                >
-                  View Payment Details
-                </button>
-
-              </div>
-
-            )
-          )}
-
-        </div>
-
-        {filteredRecords.length === 0 && (
-          <div className="p-12 text-center">
-
-            <p className="font-semibold text-[#4c433d]">
-              No payment records found
-            </p>
-
-            <p className="mt-1 text-sm text-[#92857a]">
-              Try another search or filter.
-            </p>
-
-          </div>
-        )}
+        </table>
 
       </section>
 
-      {/* ========================= */}
-      {/* PAYMENT MODAL */}
-      {/* ========================= */}
+      {/* EDIT FEE MODAL */}
 
-      {selectedStudent && (
+      {editingStudent && (
 
-        <PaymentModal
-          student={selectedStudent}
-          onClose={() =>
-            setSelectedStudent(null)
-          }
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+
+            {/* HEADER */}
+
+            <div className="flex items-center justify-between border-b border-[#e8e0d5] p-6">
+
+              <div>
+
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#9b333b]">
+                  Fee Management
+                </p>
+
+                <h2 className="mt-1 text-xl font-bold text-[#332c28]">
+                  {editingStudent.name}
+                </h2>
+
+                <p className="mt-1 text-xs text-[#95887c]">
+                  {editingStudent.studentId}
+                </p>
+
+              </div>
+
+              <button
+                onClick={() =>
+                  setEditingStudent(null)
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f4eee5]"
+              >
+                ✕
+              </button>
+
+            </div>
+
+            {/* FORM */}
+
+            <div className="space-y-5 p-6">
+
+              {/* TOTAL */}
+
+              <div>
+
+                <label className="mb-2 block text-sm font-semibold text-[#51473f]">
+                  Total Fees
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={totalInput}
+                  onChange={(e) =>
+                    setTotalInput(
+                      e.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-[#ddd3c6] px-4 py-3 outline-none focus:border-[#8d3b42]"
+                />
+
+              </div>
+
+              {/* PAID */}
+
+              <div>
+
+                <label className="mb-2 block text-sm font-semibold text-[#51473f]">
+                  Paid Amount
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={paidInput}
+                  onChange={(e) =>
+                    setPaidInput(
+                      e.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-[#ddd3c6] px-4 py-3 outline-none focus:border-[#8d3b42]"
+                />
+
+              </div>
+
+              {/* PREVIEW */}
+
+              <div className="rounded-xl bg-[#faf7f1] p-4">
+
+                <p className="text-sm text-[#85776b]">
+                  Pending Amount
+                </p>
+
+                <p className="mt-1 text-2xl font-bold text-red-600">
+                  ₹
+                  {Math.max(
+                    Number(totalInput || 0) -
+                      Number(paidInput || 0),
+                    0
+                  ).toLocaleString()}
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* FOOTER */}
+
+            <div className="flex justify-end gap-3 border-t border-[#e8e0d5] p-6">
+
+              <button
+                onClick={() =>
+                  setEditingStudent(null)
+                }
+                className="rounded-xl border border-[#ddd3c6] px-4 py-2.5 text-sm font-semibold text-[#62564d]"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={saveFee}
+                className="rounded-xl bg-[#4b171b] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#641f25]"
+              >
+                Save Fees
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
 
       )}
 
@@ -567,297 +580,26 @@ function Finance() {
   );
 }
 
-/* ========================= */
-/* FINANCE CARD */
-/* ========================= */
-
-function FinanceCard({
+function SummaryCard({
   title,
   value,
-  description,
-  icon,
-  iconClass,
+  valueClass = "text-[#4b171b]",
 }) {
   return (
-    <div className="rounded-2xl border border-[#ded6ca] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+    <div className="rounded-2xl border border-[#ded6ca] bg-white p-5 shadow-sm">
 
-      <div className="flex items-start justify-between">
-
-        <div>
-
-          <p className="text-sm font-medium text-[#85776b]">
-            {title}
-          </p>
-
-          <h3 className="mt-2 text-2xl font-bold text-[#292321]">
-            {value}
-          </h3>
-
-        </div>
-
-        <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl text-lg font-bold ${iconClass}`}
-        >
-          {icon}
-        </div>
-
-      </div>
-
-      <p className="mt-4 text-xs text-[#9a8d80]">
-        {description}
+      <p className="text-sm text-[#85776b]">
+        {title}
       </p>
 
-    </div>
-  );
-}
-
-/* ========================= */
-/* STATUS SUMMARY */
-/* ========================= */
-
-function StatusSummary({
-  title,
-  count,
-  amount,
-  type,
-}) {
-  const styles = {
-    paid: "border-[#d9e8d7] bg-[#f5faf4]",
-    partial:
-      "border-[#eadfc9] bg-[#fcf8ef]",
-    pending:
-      "border-[#ecd9d5] bg-[#fcf5f3]",
-  };
-
-  return (
-    <div
-      className={`rounded-2xl border p-5 ${styles[type]}`}
-    >
-
-      <div className="flex items-center justify-between">
-
-        <p className="text-sm font-semibold text-[#51473f]">
-          {title}
-        </p>
-
-        <p className="text-2xl font-bold text-[#332c28]">
-          {count}
-        </p>
-
-      </div>
-
-      <p className="mt-2 text-sm text-[#85776b]">
-        {type === "paid"
-          ? "Collected"
-          : "Outstanding"}
-      </p>
-
-      <p className="mt-1 text-xl font-bold text-[#4b171b]">
-        {formatCurrency(amount)}
-      </p>
-
-    </div>
-  );
-}
-
-/* ========================= */
-/* BADGE */
-/* ========================= */
-
-function PaymentBadge({ status }) {
-  const styles = {
-    Paid:
-      "bg-[#e8f1e7] text-[#35643b]",
-    Partial:
-      "bg-[#f4e8cc] text-[#806323]",
-    Pending:
-      "bg-[#f4e4e1] text-[#8b4e47]",
-  };
-
-  return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[status]}`}
-    >
-      {status}
-    </span>
-  );
-}
-
-/* ========================= */
-/* MOBILE INFO */
-/* ========================= */
-
-function MobileInfo({ label, value }) {
-  return (
-    <div className="rounded-xl bg-[#faf7f1] p-3">
-
-      <p className="text-[11px] uppercase tracking-wide text-[#918478]">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-semibold text-[#4b171b]">
+      <p
+        className={`mt-2 text-2xl font-bold ${valueClass}`}
+      >
         {value}
       </p>
 
     </div>
   );
-}
-
-/* ========================= */
-/* PAYMENT MODAL */
-/* ========================= */
-
-function PaymentModal({
-  student,
-  onClose,
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
-
-        {/* HEADER */}
-
-        <div className="flex items-center justify-between border-b border-[#eee7dc] p-5">
-
-          <div>
-
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#9b333b]">
-              Payment Details
-            </p>
-
-            <h2 className="mt-1 text-xl font-bold text-[#292321]">
-              {student.student}
-            </h2>
-
-            <p className="text-sm text-[#918478]">
-              {student.studentId}
-            </p>
-
-          </div>
-
-          <button
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4eee5] text-lg text-[#4b171b] hover:bg-[#eadfd1]"
-          >
-            ×
-          </button>
-
-        </div>
-
-        {/* DETAILS */}
-
-        <div className="space-y-4 p-5">
-
-          <div className="rounded-xl bg-[#faf7f1] p-4">
-
-            <p className="text-xs text-[#918478]">
-              Department
-            </p>
-
-            <p className="mt-1 font-semibold text-[#332c28]">
-              {student.department}
-            </p>
-
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-
-            <AmountBox
-              label="Total Fee"
-              amount={student.totalFee}
-            />
-
-            <AmountBox
-              label="Paid"
-              amount={student.paid}
-            />
-
-            <AmountBox
-              label="Pending"
-              amount={student.due}
-            />
-
-          </div>
-
-          <div className="rounded-xl border border-[#e8e0d5] p-4">
-
-            <div className="flex justify-between">
-
-              <span className="text-sm text-[#85776b]">
-                Payment Status
-              </span>
-
-              <PaymentBadge
-                status={student.status}
-              />
-
-            </div>
-
-            <div className="mt-4 flex justify-between text-sm">
-
-              <span className="text-[#85776b]">
-                Last Payment
-              </span>
-
-              <span className="font-semibold text-[#332c28]">
-                {student.lastPayment}
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* FOOTER */}
-
-        <div className="border-t border-[#eee7dc] p-5">
-
-          <button
-            onClick={onClose}
-            className="w-full rounded-xl bg-[#4b171b] py-3 text-sm font-bold text-white transition hover:bg-[#641f25]"
-          >
-            Close
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-  );
-}
-
-/* ========================= */
-/* AMOUNT BOX */
-/* ========================= */
-
-function AmountBox({
-  label,
-  amount,
-}) {
-  return (
-    <div className="rounded-xl bg-[#faf7f1] p-3 text-center">
-
-      <p className="text-[11px] text-[#918478]">
-        {label}
-      </p>
-
-      <p className="mt-1 text-sm font-bold text-[#4b171b]">
-        {formatCurrency(amount)}
-      </p>
-
-    </div>
-  );
-}
-
-/* ========================= */
-/* HELPERS */
-/* ========================= */
-
-function formatCurrency(amount) {
-  return `₹${amount.toLocaleString("en-IN")}`;
 }
 
 function getInitials(name) {
@@ -868,8 +610,5 @@ function getInitials(name) {
     .slice(0, 2)
     .toUpperCase();
 }
-
-const thClass =
-  "px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-[#87796c]";
 
 export default Finance;

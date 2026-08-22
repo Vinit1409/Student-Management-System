@@ -5,6 +5,8 @@ import {
   Routes,
 } from "react-router-dom";
 
+import { TimetableProvider } from "./context/TimetableContext";
+
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import StudentForm from "./components/StudentForm";
@@ -21,42 +23,22 @@ import Assignments from "./pages/Assignments";
 import Finance from "./pages/Finance";
 import Requests from "./pages/Requests";
 
-import { initialStudents } from "./data/students";
+import {
+  StudentProvider,
+  useStudents,
+} from "./context/StudentContext";
 
-function App() {
-  const [students, setStudents] =
-    useState(initialStudents);
+
+function AppContent() {
+  const {
+    students,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+  } = useStudents();
 
   const [showForm, setShowForm] =
     useState(false);
-
-  function addStudent(student) {
-    setStudents((current) => [
-      student,
-      ...current,
-    ]);
-
-    setShowForm(false);
-  }
-
-  function updateStudent(updatedStudent) {
-    setStudents((current) =>
-      current.map((student) =>
-        student.id === updatedStudent.id
-          ? updatedStudent
-          : student
-      )
-    );
-  }
-
-  function deleteStudent(studentId) {
-    setStudents((current) =>
-      current.filter(
-        (student) =>
-          student.id !== studentId
-      )
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#f5f1e8]">
@@ -71,7 +53,10 @@ function App() {
 
           <Routes>
 
-            {/* DASHBOARD */}
+            {/* =========================
+                DASHBOARD
+            ========================= */}
+
             <Route
               path="/"
               element={
@@ -81,7 +66,11 @@ function App() {
               }
             />
 
-            {/* STUDENTS */}
+
+            {/* =========================
+                STUDENTS
+            ========================= */}
+
             <Route
               path="/students"
               element={
@@ -96,7 +85,11 @@ function App() {
               }
             />
 
-            {/* STUDENT PROFILE */}
+
+            {/* =========================
+                STUDENT PROFILE
+            ========================= */}
+
             <Route
               path="/students/:id"
               element={
@@ -106,7 +99,11 @@ function App() {
               }
             />
 
-            {/* DEPARTMENTS */}
+
+            {/* =========================
+                DEPARTMENTS
+            ========================= */}
+
             <Route
               path="/departments"
               element={
@@ -114,13 +111,22 @@ function App() {
               }
             />
 
-            {/* ACADEMICS */}
+
+            {/* =========================
+                TIMETABLE
+            ========================= */}
+
             <Route
               path="/timetable"
               element={
                 <Timetable />
               }
             />
+
+
+            {/* =========================
+                ATTENDANCE
+            ========================= */}
 
             <Route
               path="/attendance"
@@ -131,6 +137,11 @@ function App() {
               }
             />
 
+
+            {/* =========================
+                GRADEBOOK
+            ========================= */}
+
             <Route
               path="/gradebook"
               element={
@@ -140,6 +151,11 @@ function App() {
               }
             />
 
+
+            {/* =========================
+                ASSIGNMENTS
+            ========================= */}
+
             <Route
               path="/assignments"
               element={
@@ -147,13 +163,24 @@ function App() {
               }
             />
 
-            {/* ADMINISTRATION */}
+
+            {/* =========================
+                FINANCE
+            ========================= */}
+
             <Route
               path="/finance"
               element={
-                <Finance />
+                <Finance
+                  students={students}
+                />
               }
             />
+
+
+            {/* =========================
+                REQUESTS
+            ========================= */}
 
             <Route
               path="/requests"
@@ -162,6 +189,11 @@ function App() {
               }
             />
 
+
+            {/* =========================
+                SETTINGS
+            ========================= */}
+
             <Route
               path="/settings"
               element={
@@ -169,7 +201,11 @@ function App() {
               }
             />
 
-            {/* FALLBACK */}
+
+            {/* =========================
+                FALLBACK
+            ========================= */}
+
             <Route
               path="*"
               element={
@@ -186,18 +222,43 @@ function App() {
 
       </div>
 
-      {/* ADD STUDENT MODAL */}
+
+      {/* =========================
+          ADD STUDENT MODAL
+      ========================= */}
 
       {showForm && (
         <StudentForm
           onClose={() =>
             setShowForm(false)
           }
-          onSave={addStudent}
+          onSave={(student) => {
+            addStudent(student);
+            setShowForm(false);
+          }}
         />
       )}
 
     </div>
+  );
+}
+
+
+/* =========================
+   APP PROVIDERS
+========================= */
+
+function App() {
+  return (
+    <StudentProvider>
+
+      <TimetableProvider>
+
+        <AppContent />
+
+      </TimetableProvider>
+
+    </StudentProvider>
   );
 }
 

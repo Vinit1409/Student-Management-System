@@ -1,540 +1,613 @@
 import { useMemo, useState } from "react";
+import useTimetable from "../hooks/useTimetable";
 
-const timetable = [
-  {
-    id: 1,
-    day: "Monday",
-    time: "09:00 - 10:00",
-    subject: "Data Structures",
-    code: "CS301",
-    faculty: "Dr. Rahul Mehta",
-    room: "Lab 204",
-    type: "Lecture",
-  },
-  {
-    id: 2,
-    day: "Monday",
-    time: "10:15 - 11:15",
-    subject: "Database Management",
-    code: "CS302",
-    faculty: "Prof. Neha Shah",
-    room: "Room 305",
-    type: "Lecture",
-  },
-  {
-    id: 3,
-    day: "Monday",
-    time: "12:00 - 01:00",
-    subject: "Operating Systems",
-    code: "CS303",
-    faculty: "Dr. Amit Joshi",
-    room: "Room 201",
-    type: "Lecture",
-  },
-
-  {
-    id: 4,
-    day: "Tuesday",
-    time: "09:00 - 10:00",
-    subject: "Computer Networks",
-    code: "CS304",
-    faculty: "Prof. Priya Nair",
-    room: "Room 302",
-    type: "Lecture",
-  },
-  {
-    id: 5,
-    day: "Tuesday",
-    time: "10:15 - 12:15",
-    subject: "Web Development",
-    code: "CS305",
-    faculty: "Prof. Karan Patel",
-    room: "Lab 101",
-    type: "Practical",
-  },
-  {
-    id: 6,
-    day: "Tuesday",
-    time: "01:00 - 02:00",
-    subject: "Software Engineering",
-    code: "CS306",
-    faculty: "Dr. Sneha Kulkarni",
-    room: "Room 205",
-    type: "Lecture",
-  },
-
-  {
-    id: 7,
-    day: "Wednesday",
-    time: "09:00 - 10:00",
-    subject: "Database Management",
-    code: "CS302",
-    faculty: "Prof. Neha Shah",
-    room: "Room 305",
-    type: "Lecture",
-  },
-  {
-    id: 8,
-    day: "Wednesday",
-    time: "10:15 - 11:15",
-    subject: "Data Structures",
-    code: "CS301",
-    faculty: "Dr. Rahul Mehta",
-    room: "Room 204",
-    type: "Lecture",
-  },
-  {
-    id: 9,
-    day: "Wednesday",
-    time: "12:00 - 02:00",
-    subject: "Computer Networks Lab",
-    code: "CS304L",
-    faculty: "Prof. Priya Nair",
-    room: "Lab 202",
-    type: "Practical",
-  },
-
-  {
-    id: 10,
-    day: "Thursday",
-    time: "09:00 - 10:00",
-    subject: "Operating Systems",
-    code: "CS303",
-    faculty: "Dr. Amit Joshi",
-    room: "Room 201",
-    type: "Lecture",
-  },
-  {
-    id: 11,
-    day: "Thursday",
-    time: "10:15 - 11:15",
-    subject: "Software Engineering",
-    code: "CS306",
-    faculty: "Dr. Sneha Kulkarni",
-    room: "Room 205",
-    type: "Lecture",
-  },
-  {
-    id: 12,
-    day: "Thursday",
-    time: "12:00 - 02:00",
-    subject: "Web Development Lab",
-    code: "CS305L",
-    faculty: "Prof. Karan Patel",
-    room: "Lab 101",
-    type: "Practical",
-  },
-
-  {
-    id: 13,
-    day: "Friday",
-    time: "09:00 - 10:00",
-    subject: "Computer Networks",
-    code: "CS304",
-    faculty: "Prof. Priya Nair",
-    room: "Room 302",
-    type: "Lecture",
-  },
-  {
-    id: 14,
-    day: "Friday",
-    time: "10:15 - 11:15",
-    subject: "Data Structures",
-    code: "CS301",
-    faculty: "Dr. Rahul Mehta",
-    room: "Room 204",
-    type: "Lecture",
-  },
-  {
-    id: 15,
-    day: "Friday",
-    time: "12:00 - 01:00",
-    subject: "Project / Mentoring",
-    code: "PRJ401",
-    faculty: "Department Faculty",
-    room: "Seminar Hall",
-    type: "Project",
-  },
+const departments = [
+  "Computer Engineering",
+  "Information Technology",
+  "Electronics Engineering",
+  "Mechanical Engineering",
+  "Civil Engineering",
+  "Artificial Intelligence",
 ];
 
+const years = [
+  "1st Year",
+  "2nd Year",
+  "3rd Year",
+  "4th Year",
+];
+
+const divisions = ["A", "B", "C"];
+
 const days = [
-  "All",
   "Monday",
   "Tuesday",
   "Wednesday",
   "Thursday",
   "Friday",
+  "Saturday",
 ];
 
+const emptyForm = {
+  department: "Computer Engineering",
+  year: "1st Year",
+  division: "A",
+  day: "Monday",
+  startTime: "08:30",
+  endTime: "09:30",
+  subject: "",
+  faculty: "",
+  room: "",
+};
+
 function Timetable() {
-  const [selectedDay, setSelectedDay] = useState("All");
+  const {
+    timetable,
+    addLecture,
+    updateLecture,
+    deleteLecture,
+  } = useTimetable();
 
-  const filteredClasses = useMemo(() => {
-    if (selectedDay === "All") {
-      return timetable;
-    }
+  const [showForm, setShowForm] = useState(false);
 
-    return timetable.filter(
-      (item) => item.day === selectedDay
-    );
-  }, [selectedDay]);
+  const [editingId, setEditingId] =
+    useState(null);
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
+  const [form, setForm] =
+    useState(emptyForm);
+
+  const [filter, setFilter] = useState({
+    department: "Computer Engineering",
+    year: "1st Year",
+    division: "A",
   });
 
-  const todayClasses = timetable.filter(
-    (item) => item.day === today
-  );
+  function handleChange(e) {
+    const { name, value } = e.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  function openCreateForm() {
+    setEditingId(null);
+
+    setForm({
+      ...emptyForm,
+      department: filter.department,
+      year: filter.year,
+      division: filter.division,
+    });
+
+    setShowForm(true);
+  }
+
+  function openEditForm(lecture) {
+    setEditingId(lecture.id);
+    setForm(lecture);
+    setShowForm(true);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    if (
+      !form.subject ||
+      !form.faculty ||
+      !form.room
+    ) {
+      alert("Please fill all lecture details.");
+      return;
+    }
+
+    if (editingId) {
+      updateLecture(form);
+    } else {
+      addLecture(form);
+    }
+
+    setForm(emptyForm);
+    setEditingId(null);
+    setShowForm(false);
+  }
+
+  function handleDelete(id) {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this lecture?"
+    );
+
+    if (confirmDelete) {
+      deleteLecture(id);
+    }
+  }
+
+  const filteredTimetable = useMemo(() => {
+    return timetable
+      .filter(
+        (lecture) =>
+          lecture.department ===
+            filter.department &&
+          lecture.year === filter.year &&
+          lecture.division === filter.division
+      )
+      .sort((a, b) => {
+        const dayOrder = days.indexOf(a.day) -
+          days.indexOf(b.day);
+
+        if (dayOrder !== 0) {
+          return dayOrder;
+        }
+
+        return a.startTime.localeCompare(
+          b.startTime
+        );
+      });
+  }, [timetable, filter]);
 
   return (
     <div className="space-y-6">
 
-      {/* PAGE HEADER */}
-      <section>
-        <p className="text-sm font-semibold text-[#9b333b]">
-          Academics
-        </p>
+      {/* HEADER */}
 
-        <h1 className="mt-1 text-3xl font-bold text-[#302925]">
-          Class Timetable
-        </h1>
-
-        <p className="mt-2 text-sm text-[#84786d]">
-          View weekly class schedules, faculty, rooms and
-          practical sessions.
-        </p>
-      </section>
-
-      {/* SUMMARY CARDS */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-        <SummaryCard
-          title="Weekly Classes"
-          value={timetable.length}
-          description="Scheduled sessions"
-          symbol="CL"
-        />
-
-        <SummaryCard
-          title="Today"
-          value={todayClasses.length}
-          description={`${today} classes`}
-          symbol="TD"
-        />
-
-        <SummaryCard
-          title="Lectures"
-          value={
-            timetable.filter(
-              (item) => item.type === "Lecture"
-            ).length
-          }
-          description="Regular lectures"
-          symbol="LE"
-        />
-
-        <SummaryCard
-          title="Practicals"
-          value={
-            timetable.filter(
-              (item) => item.type === "Practical"
-            ).length
-          }
-          description="Lab sessions"
-          symbol="PR"
-        />
-
-      </section>
-
-      {/* DAY FILTER */}
-      <section className="rounded-2xl border border-[#ded6ca] bg-white p-4 shadow-sm">
-
-        <div className="flex flex-wrap gap-2">
-
-          {days.map((day) => (
-            <button
-              key={day}
-              onClick={() => setSelectedDay(day)}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-                selectedDay === day
-                  ? "bg-[#4b171b] text-white shadow-sm"
-                  : "bg-[#f8f4ec] text-[#65594f] hover:bg-[#eee5d8]"
-              }`}
-            >
-              {day}
-            </button>
-          ))}
-
-        </div>
-
-      </section>
-
-      {/* TIMETABLE */}
-      <section className="overflow-hidden rounded-2xl border border-[#ded6ca] bg-white shadow-sm">
-
-        <div className="border-b border-[#e8e0d5] p-5">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-
-            <div>
-              <h2 className="font-bold text-[#332c28]">
-                Weekly Schedule
-              </h2>
-
-              <p className="mt-1 text-sm text-[#918478]">
-                Academic Year 2025–26
-              </p>
-            </div>
-
-            <span className="rounded-full bg-[#f3e9dc] px-3 py-1.5 text-xs font-semibold text-[#6d2529]">
-              {filteredClasses.length} Classes
-            </span>
-
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-
-          <table className="w-full min-w-[1000px]">
-
-            <thead className="bg-[#faf7f1]">
-
-              <tr>
-
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-[#87796c]">
-                  Day
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-[#87796c]">
-                  Time
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-[#87796c]">
-                  Subject
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-[#87796c]">
-                  Faculty
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-[#87796c]">
-                  Room
-                </th>
-
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-[#87796c]">
-                  Type
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody className="divide-y divide-[#eee7dc]">
-
-              {filteredClasses.map((item) => (
-
-                <tr
-                  key={item.id}
-                  className={`transition hover:bg-[#fcfaf6] ${
-                    item.day === today
-                      ? "bg-[#fffaf2]"
-                      : ""
-                  }`}
-                >
-
-                  {/* DAY */}
-                  <td className="px-6 py-5">
-
-                    <div className="flex items-center gap-2">
-
-                      {item.day === today && (
-                        <span className="h-2 w-2 rounded-full bg-[#9b333b]" />
-                      )}
-
-                      <span className="font-semibold text-[#4b4038]">
-                        {item.day}
-                      </span>
-
-                    </div>
-
-                  </td>
-
-                  {/* TIME */}
-                  <td className="px-6 py-5">
-
-                    <span className="rounded-lg bg-[#f4eee5] px-3 py-2 text-xs font-bold text-[#6d2529]">
-                      {item.time}
-                    </span>
-
-                  </td>
-
-                  {/* SUBJECT */}
-                  <td className="px-6 py-5">
-
-                    <p className="font-semibold text-[#332c28]">
-                      {item.subject}
-                    </p>
-
-                    <p className="mt-1 text-xs text-[#95887c]">
-                      {item.code}
-                    </p>
-
-                  </td>
-
-                  {/* FACULTY */}
-                  <td className="px-6 py-5 text-sm text-[#51473f]">
-                    {item.faculty}
-                  </td>
-
-                  {/* ROOM */}
-                  <td className="px-6 py-5">
-
-                    <span className="text-sm font-medium text-[#665a50]">
-                      {item.room}
-                    </span>
-
-                  </td>
-
-                  {/* TYPE */}
-                  <td className="px-6 py-5">
-
-                    <TypeBadge type={item.type} />
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-        {filteredClasses.length === 0 && (
-          <div className="p-12 text-center">
-
-            <p className="font-semibold text-[#4c433d]">
-              No classes scheduled
-            </p>
-
-            <p className="mt-1 text-sm text-[#92857a]">
-              There are no classes for this day.
-            </p>
-
-          </div>
-        )}
-
-      </section>
-
-      {/* TODAY'S CLASSES */}
-      <section className="rounded-2xl border border-[#ded6ca] bg-[#4b171b] p-6 text-white">
-
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-
-          <div>
-
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c9a66b]">
-              Today
-            </p>
-
-            <h2 className="mt-2 text-2xl font-bold">
-              {today}
-            </h2>
-
-            <p className="mt-2 text-sm text-[#ddcfc0]">
-              {todayClasses.length > 0
-                ? `You have ${todayClasses.length} scheduled classes today.`
-                : "No classes scheduled for today."}
-            </p>
-
-          </div>
-
-          <div className="rounded-xl bg-[#693438] px-5 py-4 text-center">
-
-            <p className="text-2xl font-bold">
-              {todayClasses.length}
-            </p>
-
-            <p className="text-xs text-[#ddcfc0]">
-              Classes Today
-            </p>
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </div>
-  );
-}
-
-
-/* SUMMARY CARD */
-
-function SummaryCard({
-  title,
-  value,
-  description,
-  symbol,
-}) {
-  return (
-    <div className="rounded-2xl border border-[#ded6ca] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-
-      <div className="flex items-start justify-between">
+      <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
         <div>
-
-          <p className="text-sm font-medium text-[#85776b]">
-            {title}
+          <p className="text-sm font-semibold text-[#9b333b]">
+            Academics
           </p>
 
-          <h3 className="mt-2 text-3xl font-bold text-[#292321]">
-            {value}
-          </h3>
+          <h1 className="mt-1 text-3xl font-bold text-[#302925]">
+            Timetable
+          </h1>
+
+          <p className="mt-2 text-sm text-[#84786d]">
+            Create and manage department-wise
+            and division-wise class schedules.
+          </p>
+        </div>
+
+        <button
+          onClick={openCreateForm}
+          className="rounded-xl bg-[#6d2529] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#571d21]"
+        >
+          + Create Timetable
+        </button>
+
+      </section>
+
+      {/* FILTER */}
+
+      <section className="rounded-2xl border border-[#ded6ca] bg-white p-5 shadow-sm">
+
+        <h2 className="text-lg font-bold text-[#332c28]">
+          Select Class
+        </h2>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+
+          <SelectField
+            label="Department"
+            value={filter.department}
+            onChange={(e) =>
+              setFilter((current) => ({
+                ...current,
+                department: e.target.value,
+              }))
+            }
+            options={departments}
+          />
+
+          <SelectField
+            label="Year"
+            value={filter.year}
+            onChange={(e) =>
+              setFilter((current) => ({
+                ...current,
+                year: e.target.value,
+              }))
+            }
+            options={years}
+          />
+
+          <SelectField
+            label="Division"
+            value={filter.division}
+            onChange={(e) =>
+              setFilter((current) => ({
+                ...current,
+                division: e.target.value,
+              }))
+            }
+            options={divisions}
+          />
 
         </div>
 
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f0e1d2] text-sm font-bold text-[#6d2529]">
-          {symbol}
-        </div>
+      </section>
+
+      {/* SELECTED CLASS */}
+
+      <div className="rounded-2xl border border-[#ead9c7] bg-[#f8efe5] p-5">
+
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#9a8d80]">
+          Current Timetable
+        </p>
+
+        <h2 className="mt-1 text-xl font-bold text-[#4b171b]">
+          {filter.department}
+        </h2>
+
+        <p className="mt-1 text-sm text-[#6f6258]">
+          {filter.year} • Division {filter.division}
+        </p>
 
       </div>
 
-      <p className="mt-4 text-xs text-[#9a8d80]">
-        {description}
-      </p>
+      {/* TIMETABLE */}
+
+      {filteredTimetable.length === 0 ? (
+
+        <div className="rounded-2xl border border-dashed border-[#d7cbbd] bg-white p-10 text-center">
+
+          <div className="text-4xl">
+            📅
+          </div>
+
+          <h2 className="mt-4 text-lg font-bold text-[#332c28]">
+            No timetable created
+          </h2>
+
+          <p className="mt-2 text-sm text-[#84786d]">
+            Create a timetable for this
+            department, year and division.
+          </p>
+
+          <button
+            onClick={openCreateForm}
+            className="mt-5 rounded-xl bg-[#6d2529] px-5 py-2.5 text-sm font-semibold text-white"
+          >
+            + Create First Lecture
+          </button>
+
+        </div>
+
+      ) : (
+
+        <section className="space-y-5">
+
+          {days.map((day) => {
+
+            const dayLectures =
+              filteredTimetable.filter(
+                (lecture) =>
+                  lecture.day === day
+              );
+
+            if (dayLectures.length === 0) {
+              return null;
+            }
+
+            return (
+              <div
+                key={day}
+                className="overflow-hidden rounded-2xl border border-[#ded6ca] bg-white shadow-sm"
+              >
+
+                <div className="border-b border-[#eee7dc] bg-[#faf6f0] px-5 py-4">
+                  <h2 className="font-bold text-[#4b171b]">
+                    {day}
+                  </h2>
+                </div>
+
+                <div className="divide-y divide-[#eee7dc]">
+
+                  {dayLectures.map(
+                    (lecture) => (
+
+                      <div
+                        key={lecture.id}
+                        className="grid gap-4 px-5 py-5 md:grid-cols-[140px_1fr_auto] md:items-center"
+                      >
+
+                        {/* TIME */}
+
+                        <div>
+                          <p className="text-sm font-bold text-[#6d2529]">
+                            {lecture.startTime}
+                          </p>
+
+                          <p className="text-xs text-[#9a8d80]">
+                            to {lecture.endTime}
+                          </p>
+                        </div>
+
+                        {/* DETAILS */}
+
+                        <div>
+
+                          <h3 className="font-bold text-[#332c28]">
+                            {lecture.subject}
+                          </h3>
+
+                          <p className="mt-1 text-sm text-[#71665d]">
+                            👨‍🏫 {lecture.faculty}
+                          </p>
+
+                          <p className="mt-1 text-xs text-[#9a8d80]">
+                            Room: {lecture.room}
+                          </p>
+
+                        </div>
+
+                        {/* ACTIONS */}
+
+                        <div className="flex gap-2">
+
+                          <button
+                            onClick={() =>
+                              openEditForm(
+                                lecture
+                              )
+                            }
+                            className="rounded-lg border border-[#ddd3c6] px-3 py-2 text-xs font-semibold text-[#62564d] hover:bg-[#f5eee5]"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handleDelete(
+                                lecture.id
+                              )
+                            }
+                            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
+                          >
+                            Delete
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              </div>
+            );
+          })}
+
+        </section>
+
+      )}
+
+      {/* CREATE / EDIT MODAL */}
+
+      {showForm && (
+
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+
+            <div className="flex items-center justify-between">
+
+              <div>
+                <h2 className="text-xl font-bold text-[#332c28]">
+                  {editingId
+                    ? "Edit Lecture"
+                    : "Create Lecture"}
+                </h2>
+
+                <p className="mt-1 text-sm text-[#84786d]">
+                  Add lecture details to the timetable.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingId(null);
+                }}
+                className="text-xl text-[#84786d]"
+              >
+                ×
+              </button>
+
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              className="mt-6 space-y-5"
+            >
+
+              <div className="grid gap-4 md:grid-cols-3">
+
+                <SelectField
+                  label="Department"
+                  name="department"
+                  value={form.department}
+                  onChange={handleChange}
+                  options={departments}
+                />
+
+                <SelectField
+                  label="Year"
+                  name="year"
+                  value={form.year}
+                  onChange={handleChange}
+                  options={years}
+                />
+
+                <SelectField
+                  label="Division"
+                  name="division"
+                  value={form.division}
+                  onChange={handleChange}
+                  options={divisions}
+                />
+
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+
+                <SelectField
+                  label="Day"
+                  name="day"
+                  value={form.day}
+                  onChange={handleChange}
+                  options={days}
+                />
+
+                <InputField
+                  label="Start Time"
+                  type="time"
+                  name="startTime"
+                  value={form.startTime}
+                  onChange={handleChange}
+                />
+
+                <InputField
+                  label="End Time"
+                  type="time"
+                  name="endTime"
+                  value={form.endTime}
+                  onChange={handleChange}
+                />
+
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+
+                <InputField
+                  label="Subject"
+                  name="subject"
+                  placeholder="e.g. Database Management"
+                  value={form.subject}
+                  onChange={handleChange}
+                />
+
+                <InputField
+                  label="Faculty"
+                  name="faculty"
+                  placeholder="e.g. Prof. Sharma"
+                  value={form.faculty}
+                  onChange={handleChange}
+                />
+
+              </div>
+
+              <InputField
+                label="Room / Lab"
+                name="room"
+                placeholder="e.g. Room 301 / Lab 2"
+                value={form.room}
+                onChange={handleChange}
+              />
+
+              <div className="flex justify-end gap-3 border-t border-[#eee7dc] pt-5">
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                  }}
+                  className="rounded-xl border border-[#ddd3c6] px-5 py-2.5 text-sm font-semibold text-[#62564d]"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="rounded-xl bg-[#6d2529] px-5 py-2.5 text-sm font-semibold text-white"
+                >
+                  {editingId
+                    ? "Update Lecture"
+                    : "Add Lecture"}
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      )}
 
     </div>
   );
 }
 
 
-/* TYPE BADGE */
+/* =========================
+   SELECT FIELD
+========================= */
 
-function TypeBadge({ type }) {
-
-  const classes = {
-    Lecture:
-      "bg-[#eee8dc] text-[#705d48]",
-
-    Practical:
-      "bg-[#e5efe4] text-[#35643b]",
-
-    Project:
-      "bg-[#f1e7cf] text-[#856526]",
-  };
-
+function SelectField({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+}) {
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-        classes[type] || "bg-gray-100 text-gray-600"
-      }`}
-    >
-      {type}
-    </span>
+    <div>
+      <label className="mb-1.5 block text-sm font-semibold text-[#51473f]">
+        {label}
+      </label>
+
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-xl border border-[#dcd2c5] bg-white px-4 py-2.5 text-sm outline-none focus:border-[#9b333b]"
+      >
+        {options.map((option) => (
+          <option
+            key={option}
+            value={option}
+          >
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+
+/* =========================
+   INPUT FIELD
+========================= */
+
+function InputField({
+  label,
+  type = "text",
+  name,
+  value,
+  onChange,
+  placeholder,
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-semibold text-[#51473f]">
+        {label}
+      </label>
+
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full rounded-xl border border-[#dcd2c5] px-4 py-2.5 text-sm outline-none focus:border-[#9b333b]"
+      />
+    </div>
   );
 }
 
