@@ -336,6 +336,7 @@ export function StudentProvider({ children }) {
 
 export function useStudents() {
   const context =
+  
     useContext(StudentContext);
 
   if (!context) {
