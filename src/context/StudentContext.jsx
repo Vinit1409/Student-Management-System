@@ -5,42 +5,22 @@ import {
   useState,
 } from "react";
 
-import { initialStudents } from "../data/students";
+import api from "../services/api";
 
 const StudentContext = createContext(null);
 
 export function StudentProvider({ children }) {
-  // ==================================================
-  // STUDENTS
-  // ==================================================
-
-  const [students, setStudents] = useState(() => {
-    const savedStudents = localStorage.getItem(
-      "student-management-students"
-    );
-
-    return savedStudents
-      ? JSON.parse(savedStudents)
-      : initialStudents;
-  });
-
-  // ==================================================
-  // ATTENDANCE
-  // ==================================================
+  const [students, setStudents] = useState([]);
 
   const [attendance, setAttendance] = useState(() => {
     const savedAttendance = localStorage.getItem(
-      "student-management-attendance"
+      "student-management-attendance" 
     );
 
     return savedAttendance
       ? JSON.parse(savedAttendance)
       : {};
   });
-
-  // ==================================================
-  // FEES
-  // ==================================================
 
   const [fees, setFees] = useState(() => {
     const savedFees = localStorage.getItem(
@@ -52,20 +32,21 @@ export function StudentProvider({ children }) {
       : {};
   });
 
-  // ==================================================
-  // useEffect - STUDENTS
-  // ==================================================
-
   useEffect(() => {
-    localStorage.setItem(
-      "student-management-students",
-      JSON.stringify(students)
-    );
-  }, [students]);
+    fetchStudents();
+  }, []);
 
-  // ==================================================
-  // useEffect - ATTENDANCE
-  // ==================================================
+  async function fetchStudents() {
+    try {
+      const response = await api.get("/students");
+
+      console.log("Students from API:", response.data);
+
+      setStudents(response.data);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
+  }
 
   useEffect(() => {
     localStorage.setItem(
@@ -74,10 +55,6 @@ export function StudentProvider({ children }) {
     );
   }, [attendance]);
 
-  // ==================================================
-  // useEffect - FEES
-  // ==================================================
-
   useEffect(() => {
     localStorage.setItem(
       "student-management-fees",
@@ -85,83 +62,85 @@ export function StudentProvider({ children }) {
     );
   }, [fees]);
 
-  // ==================================================
-  // ADD STUDENT
-  // ==================================================
+  async function addStudent(student) {
+    try {
+      const response = await api.post(
+        "/students",
+        student
+      );
 
-  function addStudent(student) {
-    const newStudent = {
-      ...student,
-      id: Date.now(),
-    };
+      setStudents((current) => [
+        response.data,
+        ...current,
+      ]);
 
-    setStudents((current) => [
-      newStudent,
-      ...current,
-    ]);
+      setAttendance((current) => ({
+        ...current,
+        [response.data._id]: {
+          present: 0,
+          absent: 0,
+        },
+      }));
 
-    // New student ka attendance initially empty
-    setAttendance((current) => ({
-      ...current,
-      [newStudent.id]: {
-        present: 0,
-        absent: 0,
-      },
-    }));
-
-    // New student ka fee record
-    setFees((current) => ({
-      ...current,
-      [newStudent.id]: {
-        total: 80000,
-        paid: 0,
-      },
-    }));
+      setFees((current) => ({
+        ...current,
+        [response.data._id]: {
+          total: 80000,
+          paid: 0,
+        },
+      }));
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add student");
+    }
   }
 
-  // ==================================================
-  // UPDATE STUDENT
-  // ==================================================
+  async function updateStudent(updatedStudent) {
+    try {
+      const response = await api.put(
+        `/students/${updatedStudent._id}`,
+        updatedStudent
+      );
 
-  function updateStudent(updatedStudent) {
-    setStudents((current) =>
-      current.map((student) =>
-        student.id === updatedStudent.id
-          ? updatedStudent
-          : student
-      )
-    );
+      setStudents((current) =>
+        current.map((student) =>
+          student._id === updatedStudent._id
+            ? response.data
+            : student
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update student");
+    }
   }
+  async function deleteStudent(studentId) {
+    console.log("DELETE ID =", studentId);
 
-  // ==================================================
-  // DELETE STUDENT
-  // ==================================================
+    try {
+      await api.delete(`/students/${studentId}`);
 
-  function deleteStudent(studentId) {
-    setStudents((current) =>
-      current.filter(
-        (student) =>
-          student.id !== studentId
-      )
-    );
+      setStudents((current) =>
+        current.filter(
+          (student) => student._id !== studentId
+        )
+      );
 
-    // Delete attendance record
-    setAttendance((current) => {
-      const updated = { ...current };
+      setAttendance((current) => {
+        const updated = { ...current };
+        delete updated[studentId];
+        return updated;
+      });
 
-      delete updated[studentId];
-
-      return updated;
-    });
-
-    // Delete fee record
-    setFees((current) => {
-      const updated = { ...current };
-
-      delete updated[studentId];
-
-      return updated;
-    });
+      setFees((current) => {
+        const updated = { ...current };
+        delete updated[studentId];
+        return updated;
+      });
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete student");
+    }
   }
 
   // ==================================================
@@ -219,15 +198,11 @@ export function StudentProvider({ children }) {
       },
     }));
   }
-
-  // ==================================================
+    // ==================================================
   // UPDATE TOTAL FEES
   // ==================================================
 
-  function updateTotalFees(
-    studentId,
-    total
-  ) {
+  function updateTotalFees(studentId, total) {
     setFees((current) => {
       const oldData = current[studentId] || {
         total: 0,
@@ -248,10 +223,7 @@ export function StudentProvider({ children }) {
   // ADD FEE PAYMENT
   // ==================================================
 
-  function addFeePayment(
-    studentId,
-    amount
-  ) {
+  function addFeePayment(studentId, amount) {
     setFees((current) => {
       const oldData = current[studentId] || {
         total: 80000,
@@ -265,10 +237,7 @@ export function StudentProvider({ children }) {
         ...current,
         [studentId]: {
           ...oldData,
-          paid: Math.min(
-            newPaid,
-            oldData.total
-          ),
+          paid: Math.min(newPaid, oldData.total),
         },
       };
     });
@@ -278,10 +247,7 @@ export function StudentProvider({ children }) {
   // SET PAID AMOUNT
   // ==================================================
 
-  function setPaidAmount(
-    studentId,
-    amount
-  ) {
+  function setPaidAmount(studentId, amount) {
     setFees((current) => {
       const oldData = current[studentId] || {
         total: 80000,
@@ -330,14 +296,8 @@ export function StudentProvider({ children }) {
   );
 }
 
-// ==================================================
-// CUSTOM HOOK
-// ==================================================
-
 export function useStudents() {
-  const context =
-  
-    useContext(StudentContext);
+  const context = useContext(StudentContext);
 
   if (!context) {
     throw new Error(

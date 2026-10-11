@@ -81,14 +81,13 @@ function Students() {
   function handleDelete(student) {
     const confirmed = window.confirm(
       `Are you sure you want to delete ${student.name}?`
-    )
-
+    );
+  
     if (confirmed) {
-      deleteStudent(student.id)
-      setSelectedStudent(null)
+      deleteStudent(student._id);
+      setSelectedStudent(null);
     }
   }
-
   // =========================
   // ADD DEMO STUDENT
   // =========================
@@ -301,7 +300,7 @@ function Students() {
                 (student) => (
 
                   <tr
-                    key={student.id}
+                  key={student._id}
                     className="transition hover:bg-[#fcfaf6]"
                   >
 
@@ -340,7 +339,7 @@ function Students() {
                     <td className="px-6 py-4">
 
                       <span className="rounded-lg bg-[#f3e9dc] px-3 py-2 text-xs font-bold text-[#6d2529]">
-                        {student.studentId}
+                      {student.studentId || student._id.slice(-6).toUpperCase()}
                       </span>
 
                     </td>
@@ -442,16 +441,11 @@ function Students() {
 
       {selectedStudent && (
 
-        <StudentDetails
-          student={selectedStudent}
-          onClose={() =>
-            setSelectedStudent(null)
-          }
-          onDelete={() =>
-            handleDelete(selectedStudent)
-          }
-        />
-
+<StudentDetails
+student={selectedStudent}
+onClose={() => setSelectedStudent(null)}
+onDelete={() => handleDelete(selectedStudent)}
+/>
       )}
 
     </div>
@@ -532,7 +526,7 @@ function StudentDetails({
 
           <Detail
             label="Student ID"
-            value={student.studentId}
+            value={student.studentId || student._id.slice(-6).toUpperCase()}
           />
 
           <Detail

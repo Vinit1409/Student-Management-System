@@ -73,11 +73,8 @@ function StudentForm({
       });
     } else {
       onSave({
-        id: Date.now(),
-        studentId: `VESIT${new Date().getFullYear()}${String(
-          Date.now()
-        ).slice(-4)}`,
         ...form,
+        year: Number(form.year),
         cgpa: Number(form.cgpa),
       });
     }
@@ -185,10 +182,10 @@ function StudentForm({
                 onChange={handleChange}
                 className="w-full rounded-xl border border-[#ddd3c6] bg-[#fcfaf6] px-4 py-3 text-sm outline-none focus:border-[#8d3b42]"
               >
-                <option>First Year</option>
-                <option>Second Year</option>
-                <option>Third Year</option>
-                <option>Final Year</option>
+                <option value="1">First Year</option>
+<option value="2">Second Year</option>
+<option value="3">Third Year</option>
+<option value="4">Final Year</option>
               </select>
             </div>
 
