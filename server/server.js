@@ -14,7 +14,6 @@ connectDB();
 
 const app = express();
 
-
 app.use(cors());
 // Security Middleware
 app.use(helmet());
@@ -35,6 +34,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use(express.json());
+
 
 app.use("/api/students", studentRoutes);
 app.use("/api/auth", authRoutes);

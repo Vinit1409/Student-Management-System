@@ -43,9 +43,9 @@ function Students() {
         student.name
           .toLowerCase()
           .includes(query) ||
-        student.studentId
-          .toLowerCase()
-          .includes(query) ||
+        (student.studentId || "")
+  .toLowerCase()
+  .includes(query) ||
         student.email
           .toLowerCase()
           .includes(query) ||
@@ -79,15 +79,18 @@ function Students() {
   // =========================
 
   function handleDelete(student) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${student.name}?`
-    );
-  
-    if (confirmed) {
-      deleteStudent(student._id);
-      setSelectedStudent(null);
-    }
+  console.log("Student =", student);
+  console.log("_id =", student._id);
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete ${student.name}?`
+  );
+
+  if (confirmed) {
+    deleteStudent(student._id);
+    setSelectedStudent(null);
   }
+}
   // =========================
   // ADD DEMO STUDENT
   // =========================

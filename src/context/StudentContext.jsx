@@ -47,6 +47,7 @@ export function StudentProvider({ children }) {
       console.error("Error fetching students:", error);
     }
   }
+  
 
   useEffect(() => {
     localStorage.setItem(
@@ -64,16 +65,15 @@ export function StudentProvider({ children }) {
 
   async function addStudent(student) {
     try {
-      const response = await api.post(
-        "/students",
-        student
-      );
-
+      console.log("Student Data:", student);
+  
+      const response = await api.post("/students", student);
+  
       setStudents((current) => [
         response.data,
         ...current,
       ]);
-
+  
       setAttendance((current) => ({
         ...current,
         [response.data._id]: {
@@ -81,7 +81,7 @@ export function StudentProvider({ children }) {
           absent: 0,
         },
       }));
-
+  
       setFees((current) => ({
         ...current,
         [response.data._id]: {
@@ -90,7 +90,12 @@ export function StudentProvider({ children }) {
         },
       }));
     } catch (error) {
-      console.error(error);
+      console.error("Add Student Error:", error);
+  
+      if (error.response) {
+        console.log("Response Data:", error.response.data);
+      }
+  
       alert("Failed to add student");
     }
   }

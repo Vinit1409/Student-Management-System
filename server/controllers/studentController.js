@@ -1,3 +1,4 @@
+const { sendStudentRegistrationEmail } = require("../config/email");
 const Student = require("../models/Student");
 
 // GET all students
@@ -29,11 +30,22 @@ const getStudentById = async (req, res) => {
 const createStudent = async (req, res) => {
   try {
     const student = await Student.create(req.body);
+    await sendStudentRegistrationEmail(student);
+
     res.status(201).json(student);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.log("========== ERROR ==========");
+    console.log(error);
+    console.log(error.message);
+    console.log(error.errors);
+
+    res.status(400).json({
+      message: error.message,
+      errors: error.errors,
+    });
   }
 };
+
 
 // UPDATE student
 const updateStudent = async (req, res) => {
@@ -48,6 +60,7 @@ const updateStudent = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
+    
     res.status(200).json(student);
   } catch (error) {
     res.status(400).json({ message: error.message });

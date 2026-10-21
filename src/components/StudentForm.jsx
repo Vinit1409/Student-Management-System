@@ -74,7 +74,7 @@ function StudentForm({
     } else {
       onSave({
         ...form,
-        year: Number(form.year),
+        year: form.year,
         cgpa: Number(form.cgpa),
       });
     }
