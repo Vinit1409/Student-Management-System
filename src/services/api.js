@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://student-management-system-three-kappa.vercel.app/",
+  baseURL: "https://student-management-system-mktd.onrender.com/api",
 });
 
 api.interceptors.request.use((config) => {
